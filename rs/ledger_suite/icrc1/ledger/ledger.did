@@ -484,6 +484,7 @@ service : (ledger_arg : LedgerArg) -> {
     get_blocks : (GetBlocksArgs) -> (GetBlocksResponse) query;
     get_data_certificate : () -> (DataCertificate) query;
 
+xyztestt: () -> (text) query;
     icrc1_name : () -> (text) query;
     icrc1_symbol : () -> (text) query;
     icrc1_decimals : () -> (nat8) query;

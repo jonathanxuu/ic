@@ -575,6 +575,14 @@ fn http_request(req: HttpRequest) -> HttpResponse {
     }
 }
 
+
+#[query]
+#[candid_method(query)]
+fn xyztestt() -> String {
+    Access::with_ledger(|ledger| ledger.token_name().to_string())
+}
+
+
 #[query]
 #[candid_method(query)]
 fn icrc1_name() -> String {
