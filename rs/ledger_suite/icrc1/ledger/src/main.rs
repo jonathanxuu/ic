@@ -521,13 +521,6 @@ fn icrc1_fee() -> Nat {
     Access::with_ledger(|ledger| ledger.transfer_fee().into())
 }
 
-
-#[candid_method(query)]
-fn xyztestt() -> String {
-    Access::with_ledger(|ledger| ledger.token_name().to_string())
-}
-
-
 #[query]
 #[candid_method(query)]
 fn icrc1_metadata() -> Vec<(String, Value)> {
@@ -538,6 +531,12 @@ fn icrc1_metadata() -> Vec<(String, Value)> {
 #[candid_method(query)]
 fn icrc1_minting_account() -> Option<Account> {
     Access::with_ledger(|ledger| Some(*ledger.minting_account()))
+}
+
+#[query]
+#[candid_method(query)]
+fn icrc1_freeze_authority_account() -> Option<Account> {
+    Access::with_ledger(|ledger| ledger.freeze_authority_account().as_ref().map(|fa| fa.freeze_authority))
 }
 
 #[query(name = "icrc1_balance_of")]

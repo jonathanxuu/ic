@@ -117,6 +117,7 @@ type InitArgs = record {
         controller_id : principal;
         more_controller_ids : opt vec principal;
     };
+    freeze_authority_account: opt Account;
 };
 
 type ChangeFeeCollector = variant {
@@ -508,5 +509,5 @@ service : (ledger_arg : LedgerArg) -> {
     icrc10_supported_standards : () -> (vec record { name : text; url : text }) query;
 
     is_ledger_ready: () -> (bool) query;
-    xyztestt: () -> (text) query;
+    icrc1_freeze_authority_account: () ->  (opt Account) query;
 }

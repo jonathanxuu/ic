@@ -31,7 +31,7 @@ use ic_ledger_core::balances::BalancesStore;
 use ic_ledger_core::{
     approvals::{Allowance, AllowanceTable, AllowancesData},
     balances::Balances,
-    block::{BlockIndex, BlockType, EncodedBlock, FeeCollector},
+    block::{BlockIndex, BlockType, EncodedBlock, FeeCollector, FreezeAuthority},
     timestamp::TimeStamp,
 };
 use ic_ledger_hash_of::HashOf;
@@ -181,6 +181,7 @@ impl InitArgsBuilder {
             },
             max_memo_length: None,
             feature_flags: None,
+            freeze_authority_account: None,
         })
     }
 
@@ -245,6 +246,11 @@ impl InitArgsBuilder {
         self
     }
 
+    pub fn with_freeze_authority_account(mut self, account: impl Into<Account>) -> Self {
+        self.0.freeze_authority_account = Some(account.into());
+        self
+    }
+
     pub fn build(self) -> InitArgs {
         self.0
     }
@@ -263,6 +269,7 @@ pub struct InitArgs {
     pub archive_options: ArchiveOptions,
     pub max_memo_length: Option<u16>,
     pub feature_flags: Option<FeatureFlags>,
+    pub freeze_authority_account: Option<Account>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, CandidType, Deserialize)]
@@ -496,6 +503,7 @@ const UPGRADES_MEMORY_ID: MemoryId = MemoryId::new(0);
 const ALLOWANCES_MEMORY_ID: MemoryId = MemoryId::new(1);
 const ALLOWANCES_EXPIRATIONS_MEMORY_ID: MemoryId = MemoryId::new(2);
 const BALANCES_MEMORY_ID: MemoryId = MemoryId::new(3);
+const FREEZE_LIST_MEMORY_ID: MemoryId = MemoryId::new(4);
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> = RefCell::new(
@@ -521,6 +529,10 @@ thread_local! {
     // account -> tokens - map storing ledger balances.
     pub static BALANCES_MEMORY: RefCell<StableBTreeMap<Account, Tokens, VirtualMemory<DefaultMemoryImpl>>> =
         MEMORY_MANAGER.with(|memory_manager| RefCell::new(StableBTreeMap::init(memory_manager.borrow().get(BALANCES_MEMORY_ID))));
+
+    // account -> bool - map storing freeze status of accounts.
+    pub static FREEZE_LIST_MEMORY: RefCell<StableBTreeMap<Account, bool, VirtualMemory<DefaultMemoryImpl>>> =
+        MEMORY_MANAGER.with(|memory_manager| RefCell::new(StableBTreeMap::init(memory_manager.borrow().get(FREEZE_LIST_MEMORY_ID))));
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Debug)]
@@ -584,6 +596,8 @@ pub struct Ledger {
 
     #[serde(default)]
     pub ledger_version: u64,
+
+    freeze_authority_account: Option<FreezeAuthority<Account>>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, CandidType, Deserialize, Serialize)]
@@ -626,6 +640,7 @@ impl Ledger {
             fee_collector_account,
             max_memo_length,
             feature_flags,
+            freeze_authority_account,
         }: InitArgs,
         now: TimeStamp,
     ) -> Self {
@@ -663,6 +678,7 @@ impl Ledger {
             maximum_number_of_accounts: 0,
             accounts_overflow_trim_quantity: 0,
             ledger_version: LEDGER_VERSION,
+            freeze_authority_account: freeze_authority_account.map(FreezeAuthority::from),
         };
 
         for (account, balance) in initial_balances.into_iter() {
@@ -726,6 +742,10 @@ impl Ledger {
 
     pub fn copy_token_pool(&mut self) {
         self.stable_balances.token_pool = self.balances.token_pool;
+    }
+
+    pub fn freeze_authority_account(&self) -> &Option<FreezeAuthority<Account>> {
+        &self.freeze_authority_account
     }
 }
 
