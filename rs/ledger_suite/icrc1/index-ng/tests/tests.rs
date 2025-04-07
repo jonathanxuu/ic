@@ -56,6 +56,7 @@ fn upgrade_ledger(
         max_memo_length: None,
         feature_flags: None,
         change_archive_options: None,
+        change_freeze_authority: None,
     }));
     env.upgrade_canister(ledger_id, ledger_wasm(), Encode!(&args).unwrap())
         .unwrap()
