@@ -19,7 +19,7 @@ use ic_icrc1_ledger::{
     balances_len, clear_stable_allowance_data, clear_stable_balances_data, is_ready, ledger_state,
     panic_if_not_ready, set_ledger_state, LEDGER_VERSION, UPGRADES_MEMORY,
 };
-use ic_icrc1_ledger::{InitArgs, Ledger, LedgerArgument, LedgerField, LedgerState};
+use ic_icrc1_ledger::{InitArgs, Ledger, LedgerArgument, LedgerField, LedgerState, FreezeError};
 use ic_ledger_canister_core::ledger::{
     apply_transaction_no_trimming, archive_blocks, LedgerAccess, LedgerContext, LedgerData,
     TransferError as CoreTransferError,
@@ -587,6 +587,22 @@ fn execute_transfer_not_async(
     memo: Option<Memo>,
     created_at_time: Option<u64>,
 ) -> Result<BlockIndex, ic_ledger_canister_core::ledger::TransferError<Tokens>> {
+    // Check if any of the accounts involved in the transfer are frozen
+    Access::with_ledger(|ledger| {
+        if ledger.is_account_frozen(&from_account) {
+            return Err(CoreTransferError::FrozenAccount { account: from_account });
+        }
+        if ledger.is_account_frozen(&to) {
+            return Err(CoreTransferError::FrozenAccount { account: to });
+        }
+        if let Some(spender) = &spender {
+            if ledger.is_account_frozen(spender) {
+                return Err(CoreTransferError::FrozenAccount { account: *spender });
+            }
+        }
+        Ok(())
+    })?;
+
     Access::with_ledger_mut(|ledger| {
         let now = TimeStamp::from_nanos_since_unix_epoch(ic_cdk::api::time());
         let created_at_time = created_at_time.map(TimeStamp::from_nanos_since_unix_epoch);
@@ -999,6 +1015,30 @@ fn icrc21_canister_call_consent_message(
 #[candid_method(query)]
 fn is_ledger_ready() -> bool {
     is_ready()
+}
+
+#[query]
+#[candid_method(query)]
+async fn is_account_freezed(account: Account) -> bool {
+    Access::with_ledger(|ledger| ledger.is_account_frozen(&account))
+}
+
+#[update]
+#[candid_method(update)]
+async fn freeze_account(account: Account) -> Result<Account, FreezeError> {
+    panic_if_not_ready();
+    let caller = ic_cdk::caller();
+    let _ = Access::with_ledger(|ledger| ledger.freeze_account(&caller, &account));
+    Ok(account)
+}
+
+#[update]
+#[candid_method(update)]
+async fn unfreeze_account(account: Account) -> Result<Account, FreezeError> {
+    panic_if_not_ready();
+    let caller = ic_cdk::caller();
+    let _ = Access::with_ledger(|ledger| ledger.unfreeze_account(&caller, &account));
+    Ok(account)
 }
 
 candid::export_service!();

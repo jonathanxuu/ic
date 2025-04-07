@@ -85,6 +85,7 @@ fn default_init_args() -> InitArgs {
         },
         max_memo_length: None,
         feature_flags: None,
+        freeze_authority_account: None
     }
 }
 

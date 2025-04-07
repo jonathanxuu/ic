@@ -76,6 +76,7 @@ type TransferError = variant {
     TemporarilyUnavailable;
     Duplicate : record { duplicate_of : BlockIndex };
     GenericError : record { error_code : nat; message : text };
+    FrozenAccount: record { account : Account };
 };
 
 type TransferResult = variant {
@@ -479,6 +480,12 @@ type icrc21_consent_message_response = variant {
     Err: icrc21_error;
 };
 
+type FreezeError = variant {
+    NotAuthorized;
+    AlreadyFrozen;
+    NotFrozen;
+};
+
 service : (ledger_arg : LedgerArg) -> {
     archives : () -> (vec ArchiveInfo) query;
     get_transactions : (GetTransactionsRequest) -> (GetTransactionsResponse) query;
@@ -510,4 +517,7 @@ service : (ledger_arg : LedgerArg) -> {
 
     is_ledger_ready: () -> (bool) query;
     icrc1_freeze_authority_account: () ->  (opt Account) query;
+    is_account_freezed: (Account) -> (bool) query;
+    freeze_account: (Account) -> (variant { Ok: Account; Err: FreezeError });
+    unfreeze_account: (Account) -> (variant { Ok: Account; Err: FreezeError });
 }

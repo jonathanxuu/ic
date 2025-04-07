@@ -17,3 +17,4 @@ ic-ledger-hash-of = { path = "../../../../packages/ic-ledger-hash-of" }
 ic-management-canister-types = { path = "../../../types/management_canister_types" }
 ic-utils = { path = "../../../utils" }
 serde = { workspace = true }
+icrc-ledger-types = { path = "../../../../packages/icrc-ledger-types" }

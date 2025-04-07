@@ -39,6 +39,7 @@ pub enum TransferFromError {
     Duplicate { duplicate_of: Nat },
     TemporarilyUnavailable,
     GenericError { error_code: Nat, message: String },
+    FrozenAccount { account: Account },
 }
 
 impl fmt::Display for TransferFromError {
@@ -71,6 +72,7 @@ impl fmt::Display for TransferFromError {
                 duplicate_of
             ),
             Self::TemporarilyUnavailable {} => write!(f, "the ledger is temporarily unavailable"),
+            Self::FrozenAccount { account } => write!(f, "the account is frozen, account: {}", account),
             Self::GenericError {
                 error_code,
                 message,

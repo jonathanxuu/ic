@@ -9327,6 +9327,7 @@ dependencies = [
  "ic-limits",
  "ic-management-canister-types",
  "ic-utils 0.9.0",
+ "icrc-ledger-types",
  "serde",
 ]
 

@@ -747,6 +747,40 @@ impl Ledger {
     pub fn freeze_authority_account(&self) -> &Option<FreezeAuthority<Account>> {
         &self.freeze_authority_account
     }
+
+    pub fn is_account_frozen(&self, account: &Account) -> bool {
+        FREEZE_LIST_MEMORY.with(|freeze_list| freeze_list.borrow().get(account).unwrap_or(false))
+    }
+
+    pub fn freeze_account(&self, caller: &Principal, account: &Account) -> Result<(), FreezeError> {
+        if !self.freeze_authority_account.as_ref().map_or(false, |auth| auth.freeze_authority.owner == *caller) {
+            return Err(FreezeError::NotAuthorized);
+        }
+        
+        if self.is_account_frozen(account) {
+            return Err(FreezeError::AlreadyFrozen);
+        }
+
+        FREEZE_LIST_MEMORY.with(|freeze_list| {
+            freeze_list.borrow_mut().insert(account.clone(), true);
+        });
+        Ok(())
+    }
+
+    pub fn unfreeze_account(&self, caller: &Principal, account: &Account) -> Result<(), FreezeError> {
+        if !self.freeze_authority_account.as_ref().map_or(false, |auth| auth.freeze_authority.owner == *caller) {
+            return Err(FreezeError::NotAuthorized);
+        }
+        
+        if !self.is_account_frozen(account) {
+            return Err(FreezeError::NotFrozen);
+        }
+
+        FREEZE_LIST_MEMORY.with(|freeze_list| {
+            freeze_list.borrow_mut().insert(account.clone(), false);
+        });
+        Ok(())
+    }
 }
 
 impl LedgerContext for Ledger {
@@ -1314,4 +1348,11 @@ impl BalancesStore for StableBalances {
             }
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, CandidType)]
+pub enum FreezeError {
+    NotAuthorized,
+    AlreadyFrozen,
+    NotFrozen,
 }

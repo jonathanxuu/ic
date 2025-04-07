@@ -55,7 +55,9 @@ impl<Tokens: TokensType> TryFrom<EndpointsTransferError<Tokens>> for TransferErr
             CTE::BadBurn { min_burn_amount } => TE::BadBurn {
                 min_burn_amount: min_burn_amount.into(),
             },
-        })
+            CTE::FrozenAccount { .. } => {
+                return Err("FrozenAccount error should not happen for Transfer".to_string());
+            }        })
     }
 }
 
@@ -97,6 +99,9 @@ impl<Tokens: TokensType> TryFrom<EndpointsTransferError<Tokens>> for ApproveErro
             CTE::BadBurn { .. } => {
                 return Err("BadBurn error should not happen for Approve".to_string());
             }
+            CTE::FrozenAccount { .. } => {
+                return Err("FrozenAccount error should not happen for Transfer".to_string());
+            }
         })
     }
 }
@@ -137,6 +142,12 @@ impl<Tokens: TokensType> TryFrom<EndpointsTransferError<Tokens>> for TransferFro
             CTE::BadBurn { min_burn_amount } => TFE::BadBurn {
                 min_burn_amount: min_burn_amount.into(),
             },
+            CTE::FrozenAccount { account } => {
+                // return Err("FrozenAccount error should not happen for Transfer".to_string());
+                TFE::FrozenAccount {
+                    account: account.into(),
+                }
+            }
         })
     }
 }

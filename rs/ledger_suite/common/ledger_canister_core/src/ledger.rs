@@ -5,6 +5,7 @@ use ic_ledger_core::approvals::{
     AllowanceTable, AllowancesData, ApproveError, InsufficientAllowance,
 };
 use ic_ledger_core::tokens::Zero;
+use icrc_ledger_types::icrc1::account::Account;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, VecDeque};
 use std::ops::Range;
@@ -203,6 +204,7 @@ pub enum TransferError<Tokens> {
     TxDuplicate { duplicate_of: BlockIndex },
     AllowanceChanged { current_allowance: Tokens },
     SelfApproval,
+    FrozenAccount { account: Account },
 }
 
 const APPROVE_PRUNE_LIMIT: usize = 100;
