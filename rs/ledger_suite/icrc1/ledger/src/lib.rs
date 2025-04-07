@@ -287,6 +287,22 @@ impl From<ChangeFeeCollector> for Option<FeeCollector<Account>> {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Debug, CandidType, Deserialize)]
+pub enum ChangeFreezeAuthority {
+    Unset,
+    SetTo(Account),
+}
+
+impl From<ChangeFreezeAuthority> for Option<FreezeAuthority<Account>> {
+    fn from(value: ChangeFreezeAuthority) -> Self {
+        match value {
+            ChangeFreezeAuthority::Unset => None,
+            ChangeFreezeAuthority::SetTo(account) => Some(FreezeAuthority::from(account)),
+        }
+    }
+}
+
+
 #[derive(Clone, Eq, PartialEq, Debug, Default, CandidType, Deserialize)]
 pub struct ChangeArchiveOptions {
     pub trigger_threshold: Option<usize>,
@@ -346,6 +362,8 @@ pub struct UpgradeArgs {
     pub feature_flags: Option<FeatureFlags>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub change_archive_options: Option<ChangeArchiveOptions>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub change_freeze_authority: Option<ChangeFreezeAuthority>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Encode, Decode)]
@@ -954,6 +972,10 @@ impl Ledger {
                 );
             }
         }
+        if let Some(change_freeze_authority) = args.change_freeze_authority {
+            self.freeze_authority_account = change_freeze_authority.into();
+        }
+
         if let Some(feature_flags) = args.feature_flags {
             if !feature_flags.icrc2 {
                 log!(

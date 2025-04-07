@@ -59,16 +59,12 @@ impl<Account> From<Account> for FeeCollector<Account> {
 #[derive(Clone, PartialEq, Hash, Debug, Deserialize, Serialize)]
 pub struct FreezeAuthority<Account> {
     pub freeze_authority: Account,
-    /// The block index of the block where the freeze_authority has
-    /// been written.
-    pub block_index: Option<BlockIndex>,
 }
 
 impl<Account> From<Account> for FreezeAuthority<Account> {
     fn from(freeze_authority: Account) -> Self {
         Self {
             freeze_authority,
-            block_index: None,
         }
     }
 }

@@ -125,6 +125,11 @@ type ChangeFeeCollector = variant {
     Unset; SetTo: Account;
 };
 
+type ChangeFreezeAuthority = variant {
+    Unset; SetTo: Account;
+};
+
+
 type ChangeArchiveOptions = record {
     num_blocks_to_archive : opt nat64;
     max_transactions_per_response : opt nat64;
@@ -145,6 +150,7 @@ type UpgradeArgs = record {
     max_memo_length : opt nat16;
     feature_flags : opt FeatureFlags;
     change_archive_options : opt ChangeArchiveOptions;
+    change_freeze_authority: opt ChangeFreezeAuthority;
 };
 
 type LedgerArg = variant {
