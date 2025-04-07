@@ -508,4 +508,5 @@ service : (ledger_arg : LedgerArg) -> {
     icrc10_supported_standards : () -> (vec record { name : text; url : text }) query;
 
     is_ledger_ready: () -> (bool) query;
+    xyztestt: () -> (text) query;
 }

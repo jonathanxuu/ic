@@ -521,6 +521,13 @@ fn icrc1_fee() -> Nat {
     Access::with_ledger(|ledger| ledger.transfer_fee().into())
 }
 
+
+#[candid_method(query)]
+fn xyztestt() -> String {
+    Access::with_ledger(|ledger| ledger.token_name().to_string())
+}
+
+
 #[query]
 #[candid_method(query)]
 fn icrc1_metadata() -> Vec<(String, Value)> {
